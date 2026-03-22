@@ -1,0 +1,16 @@
+<!-- Animind Default Mascot - Placeholder SVG. Replace with original artwork, keep class structure. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300" fill="none">
+  <g class="mascot-body">
+    <ellipse cx="100" cy="260" rx="40" ry="10" fill="#f3e8ff" opacity="0.5"/>
+    <path d="M70 250 Q100 270 130 250 L125 180 Q100 190 75 180 Z" fill="#c084fc"/>
+    <circle cx="100" cy="140" r="50" fill="#fce7f3"/>
+    <path d="M60 120 Q80 80 100 90 Q120 80 140 120" fill="#c084fc"/>
+  </g>
+  <g class="mascot-eyes">
+    <ellipse cx="82" cy="145" rx="8" ry="10" fill="#ff6b9d"/>
+    <ellipse cx="118" cy="145" rx="8" ry="10" fill="#ff6b9d"/>
+    <circle cx="85" cy="142" r="3" fill="white"/>
+    <circle cx="121" cy="142" r="3" fill="white"/>
+  </g>
+  <path d="M92 165 Q100 172 108 165" stroke="#ff6b9d" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>
