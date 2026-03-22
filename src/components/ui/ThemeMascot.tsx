@@ -17,14 +17,14 @@ export default function ThemeMascot({ size = 'md' }: ThemeMascotProps) {
       {!imgError ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src="/mascots/mascot.png"
+          src="/mascots/mascot.jpg"
           alt="mascot"
           width={px}
           height={px * 1.8}
           loading="lazy"
           className="w-full h-full object-contain hover:animate-none mascot-float"
           onError={() => {
-            console.warn('[ThemeMascot] Failed to load mascot.png');
+            console.warn('[ThemeMascot] Failed to load mascot image');
             setImgError(true);
           }}
         />

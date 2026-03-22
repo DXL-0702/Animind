@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/mascots/mascot.png" alt="Animind" width="160" />
+<img src="public/mascots/mascot.jpg" alt="Animind" width="160" />
 
 # Animind
 
