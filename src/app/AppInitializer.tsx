@@ -27,12 +27,20 @@ export default function AppInitializer() {
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
 
+    // 检查 URL 中是否有 magic link token（避免在验证完成前重定向）
+    const isAuthCallback = typeof window !== 'undefined' && (
+      window.location.hash.includes('access_token') ||
+      window.location.hash.includes('type=magiclink') ||
+      window.location.search.includes('token_hash')
+    );
+
     // 初始化：检查当前 session
     supabase.auth.getSession().then(async ({ data: { session } }: { data: { session: Session | null } }) => {
       if (!session) {
         setUserId(null);
         setIsAdmin(false);
-        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+        // 如果是 auth callback，不要重定向，等待 onAuthStateChange 处理
+        if (!isAuthCallback && typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
           router.push('/login');
         }
       } else {
@@ -47,6 +55,12 @@ export default function AppInitializer() {
         }).catch(() => {
           setIsAdmin(false);
         });
+
+        // 如果是 auth callback，清理 URL 并跳转到首页
+        if (isAuthCallback && typeof window !== 'undefined') {
+          window.history.replaceState({}, document.title, '/');
+          router.push('/');
+        }
       }
     }).catch(() => {
       setUserId(null);
@@ -55,11 +69,14 @@ export default function AppInitializer() {
 
     // 监听登录/退出变化
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event: AuthChangeEvent, session: Session | null) => {
+      async (event: AuthChangeEvent, session: Session | null) => {
+        console.log('[Auth] State change:', event, session?.user?.id);
+
         if (!session) {
           setUserId(null);
           setIsAdmin(false);
-          if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+          // SIGNED_OUT 事件才重定向到登录页，避免在 magic link 验证过程中误重定向
+          if (event === 'SIGNED_OUT' && typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
             router.push('/login');
           }
         } else {
@@ -74,6 +91,11 @@ export default function AppInitializer() {
           }).catch(() => {
             setIsAdmin(false);
           });
+
+          // 如果是 magic link 登录成功，跳转到首页
+          if (event === 'SIGNED_IN' && typeof window !== 'undefined' && window.location.pathname === '/login') {
+            router.push('/');
+          }
         }
       }
     );
