@@ -31,45 +31,48 @@ export async function uploadCharacterImage(
   characterId: string,
   imageUrl: string
 ): Promise<string> {
+  console.log('[Storage] Starting upload for character:', characterId);
+
   let blob: Blob;
   if (imageUrl.startsWith('data:')) {
     // base64 data URL (Jimeng)
+    console.log('[Storage] Converting base64 to blob');
     const base64 = imageUrl.split(',')[1];
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
     blob = new Blob([bytes], { type: 'image/png' });
   } else {
     // Remote URL (Doubao CDN) — fetch to blob so we can persist it
+    console.log('[Storage] Fetching remote image:', imageUrl);
     const res = await fetch(imageUrl);
     if (!res.ok) throw new Error(`Failed to fetch image: ${res.status}`);
     blob = await res.blob();
   }
+
+  console.log('[Storage] Blob created, size:', blob.size, 'bytes');
 
   const path = `${userId}/${characterId}.png`;
   const supabase = getSupabaseBrowserClient();
 
   // 首次调用时确保 bucket 存在
   if (!bucketChecked) {
+    console.log('[Storage] Checking if bucket exists...');
     await ensureBucket();
     bucketChecked = true;
   }
 
+  console.log('[Storage] Uploading to path:', path);
   const { error } = await supabase.storage
     .from(BUCKET)
     .upload(path, blob, { upsert: true, contentType: 'image/png' });
 
   if (error) {
-    console.error('[Storage] Upload failed:', error.message);
-    // 回退到 base64 — 但加上警告
-    console.warn('[Storage] Falling back to base64 data URL. Image may not persist across sessions.');
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    console.error('[Storage] Upload failed:', error);
+    throw new Error(`Storage upload failed: ${error.message}`);
   }
 
   // 添加 cache-busting 参数，避免浏览器缓存旧图片
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-  return `${data.publicUrl}?t=${Date.now()}`;
+  const finalUrl = `${data.publicUrl}?t=${Date.now()}`;
+  console.log('[Storage] Upload successful, public URL:', finalUrl);
+  return finalUrl;
 }

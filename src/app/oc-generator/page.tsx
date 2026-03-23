@@ -55,19 +55,41 @@ export default function OCGeneratorPage() {
   useEffect(() => {
     if (!generatedImageUrl || !savedCharacterId || !userId) return;
     setImageUploadError(null);
+
+    let mounted = true;
+
     (async () => {
       try {
+        console.log('[OC] Starting image upload for character:', savedCharacterId);
         const publicUrl = await uploadCharacterImage(userId, savedCharacterId, generatedImageUrl);
+
+        if (!mounted) {
+          console.warn('[OC] Component unmounted, skipping DB update');
+          return;
+        }
+
+        console.log('[OC] Image uploaded successfully, updating DB with URL:', publicUrl);
         await dal.characters.update(savedCharacterId, { image_url: publicUrl });
+
+        console.log('[OC] DB updated successfully');
         setMyCharacters((prev) =>
           prev.map((c) => c.id === savedCharacterId ? { ...c, image_url: publicUrl } : c)
         );
+
+        // 显示成功提示
+        alert('立绘已保存！');
       } catch (e) {
         console.error('[OC] Image upload/save failed:', e);
-        setImageUploadError(t('oc.image.uploadFail'));
+        const errorMsg = e instanceof Error ? e.message : '未知错误';
+        setImageUploadError(`${t('oc.image.uploadFail')}: ${errorMsg}`);
+
+        // 显示详细错误
+        alert(`立绘保存失败：${errorMsg}\n\n请检查：\n1. Supabase Storage bucket 是否已创建\n2. 网络连接是否正常\n3. 浏览器控制台是否有详细错误信息`);
       }
     })();
-  }, [generatedImageUrl, savedCharacterId, userId]);
+
+    return () => { mounted = false; };
+  }, [generatedImageUrl, savedCharacterId, userId, t]);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
