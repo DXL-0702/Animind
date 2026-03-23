@@ -11,8 +11,7 @@ export default function LoginPage() {
   const [mode, setMode] = useState<LoginMode>('user');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,18 +21,11 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      if (!otpSent) {
-        // 发送验证码
-        await signInWithOTP(email);
-        setOtpSent(true);
-        setError('验证码已发送到您的邮箱，请查收');
-      } else {
-        // 验证验证码
-        await verifyOTP(email, otp);
-        router.push('/');
-      }
+      await signInWithOTP(email);
+      setEmailSent(true);
+      setError('登录链接已发送到您的邮箱，请点击邮件中的链接完成登录');
     } catch (err) {
-      setError(err instanceof Error ? err.message : '操作失败，请重试');
+      setError(err instanceof Error ? err.message : '发送失败，请重试');
     } finally {
       setLoading(false);
     }
@@ -80,7 +72,7 @@ export default function LoginPage() {
               onClick={() => {
                 setMode('user');
                 setError(null);
-                setOtpSent(false);
+                setEmailSent(false);
               }}
             >
               我是用户
@@ -90,7 +82,7 @@ export default function LoginPage() {
               onClick={() => {
                 setMode('admin');
                 setError(null);
-                setOtpSent(false);
+                setEmailSent(false);
               }}
             >
               我是管理员
@@ -109,29 +101,13 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  disabled={otpSent}
+                  disabled={emailSent}
                   autoComplete="email"
                 />
               </label>
 
-              {otpSent && (
-                <label className="form-control">
-                  <span className="label-text mb-1">验证码</span>
-                  <input
-                    type="text"
-                    className="input input-bordered w-full"
-                    placeholder="请输入6位验证码"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    required
-                    maxLength={6}
-                    autoComplete="one-time-code"
-                  />
-                </label>
-              )}
-
               {error && (
-                <div className={`alert ${otpSent && !error.includes('失败') ? 'alert-success' : 'alert-error'} py-2 text-sm`}>
+                <div className={`alert ${emailSent && !error.includes('失败') ? 'alert-success' : 'alert-error'} py-2 text-sm`}>
                   <span>{error}</span>
                 </div>
               )}
@@ -139,28 +115,27 @@ export default function LoginPage() {
               <button
                 type="submit"
                 className="btn btn-primary w-full mt-1"
-                disabled={loading}
+                disabled={loading || emailSent}
               >
                 {loading ? (
                   <span className="loading loading-spinner loading-sm" />
-                ) : otpSent ? (
-                  '验证并登录'
+                ) : emailSent ? (
+                  '已发送，请查收邮件'
                 ) : (
-                  '发送验证码'
+                  '发送登录链接'
                 )}
               </button>
 
-              {otpSent && (
+              {emailSent && (
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
                   onClick={() => {
-                    setOtpSent(false);
-                    setOtp('');
+                    setEmailSent(false);
                     setError(null);
                   }}
                 >
-                  重新发送验证码
+                  重新发送
                 </button>
               )}
             </form>

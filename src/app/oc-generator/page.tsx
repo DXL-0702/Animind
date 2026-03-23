@@ -209,16 +209,25 @@ export default function OCGeneratorPage() {
                     <option value="doubao">豆包 Seedream 4.5</option>
                   </select>
                   <button
-                    className={`btn btn-accent btn-sm flex-1 ${imageGenerating ? 'loading' : ''}`}
+                    className={`btn btn-accent btn-sm flex-1`}
                     onClick={() => {
                       const { prompt: imgPrompt, negative_prompt } = buildCharacterImagePrompt(character.appearance || {}, character.gender);
                       generateImage(imgPrompt, negative_prompt);
                     }}
                     disabled={imageGenerating}
                   >
-                    {imageGenerating ? `${t('oc.image.generating')} (${imageProgress})` : `🎨 ${t('oc.btn.generateImage')}`}
+                    {imageGenerating ? `${t('oc.image.generating')}` : `🎨 ${t('oc.btn.generateImage')}`}
                   </button>
                 </div>
+                {imageGenerating && (
+                  <div className="mt-2">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span>{imageProgress === 'submitting' ? '提交中...' : imageProgress === 'pending' ? '生成中...' : '处理中...'}</span>
+                      <span>{imageProgress}</span>
+                    </div>
+                    <progress className="progress progress-accent w-full" value={imageProgress === 'submitting' ? 30 : imageProgress === 'pending' ? 60 : 90} max="100"></progress>
+                  </div>
+                )}
                 {imageError && <p className="text-error text-sm mt-1">{t('oc.image.fail')}: {imageError}</p>}
                 {imageUploadError && <p className="text-warning text-sm mt-1">{imageUploadError}</p>}
               </>

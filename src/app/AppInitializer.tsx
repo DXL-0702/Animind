@@ -36,16 +36,17 @@ export default function AppInitializer() {
           router.push('/login');
         }
       } else {
+        // 立即设置 userId，不等待 admin 检查完成
         setUserId(session.user.id);
-        try {
-          const admin = await Promise.race([
-            checkIsAdmin(session.user.id),
-            new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 5000))
-          ]);
+        // 异步检查管理员权限，不阻塞 UI
+        Promise.race([
+          checkIsAdmin(session.user.id),
+          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 5000))
+        ]).then(admin => {
           setIsAdmin(admin);
-        } catch {
+        }).catch(() => {
           setIsAdmin(false);
-        }
+        });
       }
     }).catch(() => {
       setUserId(null);
@@ -62,16 +63,17 @@ export default function AppInitializer() {
             router.push('/login');
           }
         } else {
+          // 立即设置 userId，不等待 admin 检查完成
           setUserId(session.user.id);
-          try {
-            const admin = await Promise.race([
-              checkIsAdmin(session.user.id),
-              new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 5000))
-            ]);
+          // 异步检查管理员权限，不阻塞 UI
+          Promise.race([
+            checkIsAdmin(session.user.id),
+            new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 5000))
+          ]).then(admin => {
             setIsAdmin(admin);
-          } catch {
+          }).catch(() => {
             setIsAdmin(false);
-          }
+          });
         }
       }
     );
