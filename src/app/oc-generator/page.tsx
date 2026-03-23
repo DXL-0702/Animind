@@ -233,7 +233,17 @@ export default function OCGeneratorPage() {
                   <button
                     className={`btn btn-accent btn-sm flex-1`}
                     onClick={() => {
-                      const { prompt: imgPrompt, negative_prompt } = buildCharacterImagePrompt(character.appearance || {}, character.gender);
+                      // 传入 provider 参数，确保使用中文提示词
+                      const { prompt: imgPrompt, negative_prompt } = buildCharacterImagePrompt(
+                        character.appearance || {},
+                        character.gender,
+                        imageProvider  // 'jimeng' | 'doubao'
+                      );
+
+                      // 打印日志，方便调试
+                      console.log('[OC] 生成的提示词:', imgPrompt);
+                      console.log('[OC] 提示词长度:', imgPrompt.length, '字');
+
                       generateImage(imgPrompt, negative_prompt);
                     }}
                     disabled={imageGenerating}
