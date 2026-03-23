@@ -248,7 +248,7 @@ npm run dev
 ### ✅ Phase 3 — 云端化
 Supabase 数据库迁移 · 用户认证 · Storage 图片持久化 · RLS 行级安全
 
-### 🔲 Phase 4 — 社区
+### ✅ Phase 4 — 社区
 多用户支持 · 角色分享 · 社区画廊 · 本地 SD 集成
 
 ---
