@@ -1,12 +1,20 @@
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
-// 用户邮箱验证码登录 - 发送 OTP
+// 用户邮箱 Magic Link 登录 - 使用 PKCE flow 提高兼容性
 export async function signInWithOTP(email: string) {
   const supabase = getSupabaseBrowserClient();
+
+  // 获取当前域名作为 redirect URL
+  const redirectTo = typeof window !== 'undefined'
+    ? `${window.location.origin}/auth/callback`
+    : undefined;
+
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       shouldCreateUser: true,
+      // 使用 PKCE flow，更安全且兼容性更好
+      emailRedirectTo: redirectTo,
     },
   });
   if (error) throw error;
