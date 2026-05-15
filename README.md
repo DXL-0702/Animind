@@ -14,7 +14,7 @@
 [![React](https://img.shields.io/badge/React-19-61dafb)](https://react.dev/)
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-5A0FC8)](https://web.dev/progressive-web-apps/)
 
-[在线体验](https://animind.vercel.app) · [开发文档](./CLAUDE.md) · [问题反馈](https://github.com/yourusername/animind/issues)
+[在线体验](https://animind.fun) · [开发文档](./CLAUDE.md) · [问题反馈](https://github.com/yourusername/animind/issues)
 
 </div>
 
