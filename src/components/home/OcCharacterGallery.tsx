@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { dal } from '@/lib/dal';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppStore } from '@/stores/app-store';
 import ThemeMascot from '@/components/ui/ThemeMascot';
 import type { Character } from '@/lib/dal/types';
 
-const SPARKLE_COLORS = ['#D4845C', '#E8A87C', '#C9A961'];
+const SPARKLE_COLORS = ['#D04050', '#F0D0D8', '#D8B050'];
 
 export default function OcCharacterGallery() {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ export default function OcCharacterGallery() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -38,7 +40,6 @@ export default function OcCharacterGallery() {
     load();
   }, [userId, load]);
 
-  // Reload on window focus and visibilitychange (covers tab switch back)
   useEffect(() => {
     if (!userId) return;
     const onFocus = () => load();
@@ -51,8 +52,7 @@ export default function OcCharacterGallery() {
     };
   }, [userId, load]);
 
-  // Reset image error state when switching characters
-  useEffect(() => { setImgError(false); }, [currentIndex]);
+  useEffect(() => { setImgError(false); setImgLoaded(false); }, [currentIndex]);
 
   const current = characters[currentIndex] ?? null;
 
@@ -61,11 +61,10 @@ export default function OcCharacterGallery() {
   const next = () =>
     setCurrentIndex((i) => (i < characters.length - 1 ? i + 1 : 0));
 
-  // Show mascot fallback when: not logged in yet, still loading, or no characters
   if (!userId || !loaded || characters.length === 0) {
     return (
       <aside className="w-full lg:w-1/4 lg:sticky lg:top-4 lg:self-start">
-        <div className="bg-base-100/70 backdrop-blur-sm rounded-2xl p-6 hover:scale-[1.02] transition-transform duration-300">
+        <div className="bg-base-100/70 backdrop-blur-sm rounded-2xl p-6 hover:scale-[1.02] hover:shadow-md transition-all duration-300">
           <div className="flex justify-center mb-6">
             <ThemeMascot size="lg" />
           </div>
@@ -100,14 +99,18 @@ export default function OcCharacterGallery() {
 
   return (
     <aside className="w-full lg:w-1/4 lg:sticky lg:top-4 lg:self-start">
-      <div className="bg-base-100/70 backdrop-blur-sm rounded-2xl p-4">
+      <div className="bg-base-100/70 backdrop-blur-sm rounded-2xl p-4 shadow-md">
         {/* Character image or placeholder */}
         <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-3 bg-base-200 flex items-center justify-center">
+          {!imgLoaded && hasValidImage && (
+            <div className="absolute inset-0 bg-gradient-to-r from-base-200 via-base-300 to-base-200 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite]" />
+          )}
           {hasValidImage ? (
             <img
               src={current.image_url!}
               alt={current.name}
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover transition-opacity duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+              onLoad={() => setImgLoaded(true)}
               onError={() => {
                 console.warn('[Gallery] Image load failed:', current.image_url);
                 setImgError(true);
@@ -152,7 +155,7 @@ export default function OcCharacterGallery() {
         {characters.length > 1 && (
           <div className="flex items-center justify-center gap-4 mb-3">
             <button
-              className="btn btn-ghost btn-xs btn-circle"
+              className="btn btn-ghost btn-xs btn-circle active:scale-90 transition-transform"
               onClick={prev}
               aria-label={t('home.gallery.nav.prev')}
             >
@@ -162,7 +165,7 @@ export default function OcCharacterGallery() {
               {currentIndex + 1} / {characters.length}
             </span>
             <button
-              className="btn btn-ghost btn-xs btn-circle"
+              className="btn btn-ghost btn-xs btn-circle active:scale-90 transition-transform"
               onClick={next}
               aria-label={t('home.gallery.nav.next')}
             >
@@ -172,9 +175,9 @@ export default function OcCharacterGallery() {
         )}
 
         {/* Go to companion */}
-        <a href="/companion" className="btn btn-primary btn-sm w-full">
+        <Link href="/companion" className="btn btn-primary btn-sm w-full active:scale-[0.97] transition-transform">
           {t('home.gallery.viewCompanion')}
-        </a>
+        </Link>
       </div>
     </aside>
   );

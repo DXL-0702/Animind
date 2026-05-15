@@ -11,6 +11,11 @@ import { useAppStore } from '@/stores/app-store';
 import { useImageGeneration, type ImageProvider } from '@/hooks/useImageGeneration';
 import { buildCharacterImagePrompt } from '@/lib/llm/image-prompt-builder';
 import { uploadCharacterImage } from '@/lib/supabase/storage';
+import ToolPageShell from '@/components/layout/ToolPageShell';
+import ToolInputCard from '@/components/layout/ToolInputCard';
+import ImageProviderSelect from '@/components/ui/ImageProviderSelect';
+import { useToast } from '@/hooks/useToast';
+import Link from 'next/link';
 
 export default function OCGeneratorPage() {
   const { t, locale } = useTranslation();
@@ -18,10 +23,10 @@ export default function OCGeneratorPage() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [character, setCharacter] = useState<any>(null);
+  const { success: toastSuccess, error: toastError } = useToast();
   const [imageProvider, setImageProvider] = useState<ImageProvider>('jimeng');
   const { generate: generateImage, isGenerating: imageGenerating, progress: imageProgress, imageUrl: generatedImageUrl, error: imageError, reset: resetImage } = useImageGeneration(imageProvider);
 
-  // New state for save-first flow + browse mode
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [savedCharacterId, setSavedCharacterId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -29,7 +34,6 @@ export default function OCGeneratorPage() {
   const [myCharacters, setMyCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
 
-  // Load user's characters
   const loadMyCharacters = useCallback(async () => {
     if (!userId) return;
     try {
@@ -42,7 +46,6 @@ export default function OCGeneratorPage() {
 
   useEffect(() => { loadMyCharacters(); }, [loadMyCharacters]);
 
-  // Keep selectedCharacter in sync when myCharacters updates (e.g. after image upload)
   useEffect(() => {
     if (!selectedCharacter) return;
     const updated = myCharacters.find((c) => c.id === selectedCharacter.id);
@@ -51,7 +54,6 @@ export default function OCGeneratorPage() {
     }
   }, [myCharacters, selectedCharacter]);
 
-  // Auto-upload image to storage and update DB when image is generated after save
   useEffect(() => {
     if (!generatedImageUrl || !savedCharacterId || !userId) return;
     setImageUploadError(null);
@@ -76,15 +78,12 @@ export default function OCGeneratorPage() {
           prev.map((c) => c.id === savedCharacterId ? { ...c, image_url: publicUrl } : c)
         );
 
-        // 显示成功提示
-        alert('立绘已保存！');
+        toastSuccess('立绘已保存！');
       } catch (e) {
         console.error('[OC] Image upload/save failed:', e);
         const errorMsg = e instanceof Error ? e.message : '未知错误';
         setImageUploadError(`${t('oc.image.uploadFail')}: ${errorMsg}`);
-
-        // 显示详细错误
-        alert(`立绘保存失败：${errorMsg}\n\n请检查：\n1. Supabase Storage bucket 是否已创建\n2. 网络连接是否正常\n3. 浏览器控制台是否有详细错误信息`);
+        toastError(`立绘保存失败：${errorMsg}`);
       }
     })();
 
@@ -110,7 +109,7 @@ export default function OCGeneratorPage() {
       if (userId) dal.toolUsage.record(userId, 'oc_generator').catch(() => {});
     } catch (error) {
       console.error('Generation failed:', error);
-      alert(t('oc.generate.fail'));
+      toastError(t('oc.generate.fail'));
     } finally {
       setLoading(false);
     }
@@ -118,7 +117,7 @@ export default function OCGeneratorPage() {
 
   const handleSave = async () => {
     if (!character) return;
-    if (!userId) { alert(t('oc.save.wait')); return; }
+    if (!userId) { toastError(t('oc.save.wait')); return; }
     setSaving(true);
     try {
       const newChar = await dal.characters.create({
@@ -133,10 +132,10 @@ export default function OCGeneratorPage() {
       });
       setSavedCharacterId(newChar.id);
       loadMyCharacters();
-      alert(t('oc.save.success'));
+      toastSuccess(t('oc.save.success'));
     } catch (error) {
       console.error('Save failed:', error);
-      alert(t('oc.save.fail'));
+      toastError(t('oc.save.fail'));
     } finally {
       setSaving(false);
     }
@@ -148,8 +147,6 @@ export default function OCGeneratorPage() {
   const parsedAppearance = (char: Character) => {
     try { return JSON.parse(char.appearance); } catch { return null; }
   };
-
-  // --- Render helpers ---
 
   const renderSaveButton = () => {
     if (saving) return <button className="btn btn-primary flex-1" disabled>{t('oc.btn.saving')}</button>;
@@ -226,24 +223,17 @@ export default function OCGeneratorPage() {
             {isLive && (
               <>
                 <div className="flex items-center gap-2 mt-4">
-                  <select className="select select-bordered select-sm" value={imageProvider} onChange={(e) => setImageProvider(e.target.value as ImageProvider)} disabled={imageGenerating}>
-                    <option value="jimeng">即梦AI (Anime)</option>
-                    <option value="doubao">豆包 Seedream 4.5</option>
-                  </select>
+                  <ImageProviderSelect value={imageProvider} onChange={setImageProvider} disabled={imageGenerating} />
                   <button
-                    className={`btn btn-accent btn-sm flex-1`}
+                    className="btn btn-accent btn-sm flex-1"
                     onClick={() => {
-                      // 传入 provider 参数，确保使用中文提示词
                       const { prompt: imgPrompt, negative_prompt } = buildCharacterImagePrompt(
                         character.appearance || {},
                         character.gender,
-                        imageProvider  // 'jimeng' | 'doubao'
+                        imageProvider
                       );
-
-                      // 打印日志，方便调试
                       console.log('[OC] 生成的提示词:', imgPrompt);
                       console.log('[OC] 提示词长度:', imgPrompt.length, '字');
-
                       generateImage(imgPrompt, negative_prompt);
                     }}
                     disabled={imageGenerating}
@@ -289,106 +279,105 @@ export default function OCGeneratorPage() {
     );
   };
 
-  return (
-    <div className="min-h-screen theme-bg p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <div className="flex items-center gap-4 flex-wrap">
-            <a href="/" className="btn btn-ghost btn-sm">{t('nav.back')}</a>
-            <button className={`btn btn-sm ${mode === 'create' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setMode('create')}>
-              {t('oc.mode.create')}
+  const shellContent = (
+    <>
+      <div className="mb-8">
+        <div className="flex items-center gap-4 flex-wrap">
+          <button className={`btn btn-sm ${mode === 'create' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setMode('create')}>
+            {t('oc.mode.create')}
+          </button>
+          {myCharacters.length > 0 && (
+            <button className={`btn btn-sm ${mode === 'browse' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => { setMode('browse'); setSelectedCharacter(null); }}>
+              {t('oc.mode.browse')} ({myCharacters.length})
             </button>
-            {myCharacters.length > 0 && (
-              <button className={`btn btn-sm ${mode === 'browse' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => { setMode('browse'); setSelectedCharacter(null); }}>
-                {t('oc.mode.browse')} ({myCharacters.length})
-              </button>
-            )}
-          </div>
-          <h1 className="text-4xl font-bold mt-4 text-primary">🎨 {t('oc.title')}</h1>
-          <p className="opacity-60 mt-2">{t('oc.subtitle')}</p>
+          )}
         </div>
+      </div>
 
-        {mode === 'create' && (
-          <>
-            <div className="card bg-base-100 shadow-xl">
-              <div className="card-body">
-                <h2 className="card-title">{t('oc.input.title')}</h2>
-                <textarea
-                  className="textarea textarea-bordered h-32"
-                  placeholder={t('oc.input.placeholder')}
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                />
-                <button
-                  className={`btn btn-primary ${loading ? 'loading' : ''}`}
-                  onClick={handleGenerate}
-                  disabled={loading || !prompt.trim()}
-                >
-                  {loading ? t('oc.btn.generating') : t('oc.btn.generate')}
+      {mode === 'create' && (
+        <>
+          <ToolInputCard
+            title={t('oc.input.title')}
+            placeholder={t('oc.input.placeholder')}
+            value={prompt}
+            onChange={setPrompt}
+            onSubmit={handleGenerate}
+            loading={loading}
+            submitLabel={t('oc.btn.generate')}
+            loadingLabel={t('oc.btn.generating')}
+            btnClass="btn-primary"
+          />
+
+          {character && (
+            <div className="mt-8 card-enter">
+              {renderCharacterDetail(character, generatedImageUrl, true)}
+              <div className="flex gap-4 mt-4">
+                {renderSaveButton()}
+                <button className="btn btn-outline flex-1 active:scale-[0.97] transition-transform" onClick={() => { setCharacter(null); setSavedCharacterId(null); resetImage(); }}>
+                  🔄 {t('oc.btn.regenerate')}
                 </button>
               </div>
             </div>
+          )}
+        </>
+      )}
 
-            {character && (
-              <div className="mt-8">
-                {renderCharacterDetail(character, generatedImageUrl, true)}
-                <div className="flex gap-4 mt-4">
-                  {renderSaveButton()}
-                  <button className="btn btn-outline flex-1" onClick={() => { setCharacter(null); setSavedCharacterId(null); resetImage(); }}>
-                    🔄 {t('oc.btn.regenerate')}
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {mode === 'browse' && (
-          <div className="flex gap-6">
-            <div className="w-1/3 space-y-2">
-              {myCharacters.map((char) => {
-                const p = parsedPersonality(char);
-                const traits = p?.core_traits?.slice(0, 3) || [];
-                return (
-                  <div
-                    key={char.id}
-                    className={`card bg-base-100 shadow cursor-pointer hover:shadow-lg transition-shadow ${selectedCharacter?.id === char.id ? 'ring-2 ring-primary' : ''}`}
-                    onClick={() => setSelectedCharacter(char)}
-                  >
-                    <div className="card-body p-3 flex-row items-center gap-3">
-                      {char.image_url ? (
-                        <img src={char.image_url} alt={char.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-base-200 flex items-center justify-center flex-shrink-0 text-xl">🎭</div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="font-semibold truncate">{char.name}</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {traits.map((trait: string, i: number) => (
-                            <span key={i} className="badge badge-outline badge-xs">{trait}</span>
-                          ))}
-                        </div>
+      {mode === 'browse' && (
+        <div className="flex gap-6">
+          <div className="w-1/3 space-y-2">
+            {myCharacters.map((char) => {
+              const p = parsedPersonality(char);
+              const traits = p?.core_traits?.slice(0, 3) || [];
+              return (
+                <div
+                  key={char.id}
+                  className={`card bg-base-100 shadow-md cursor-pointer hover:shadow-lg active:scale-[0.98] transition-all duration-200 ${selectedCharacter?.id === char.id ? 'ring-2 ring-primary bg-primary/5' : ''}`}
+                  onClick={() => setSelectedCharacter(char)}
+                >
+                  <div className="card-body p-3 flex-row items-center gap-3">
+                    {char.image_url ? (
+                      <img src={char.image_url} alt={char.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-base-200 flex items-center justify-center flex-shrink-0 text-xl">🎭</div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{char.name}</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {traits.map((trait: string, i: number) => (
+                          <span key={i} className="badge badge-outline badge-xs">{trait}</span>
+                        ))}
                       </div>
                     </div>
                   </div>
-                );
-              })}
-              {myCharacters.length === 0 && (
-                <p className="text-center opacity-50 py-8">{t('oc.browse.empty')}</p>
-              )}
-            </div>
-            <div className="w-2/3">
-              {selectedCharacter ? (
-                renderCharacterDetail(selectedCharacter)
-              ) : (
-                <div className="flex items-center justify-center h-64 opacity-50">
-                  <p>{t('oc.browse.selectPrompt')}</p>
                 </div>
-              )}
-            </div>
+              );
+            })}
+            {myCharacters.length === 0 && (
+              <p className="text-center opacity-50 py-8">{t('oc.browse.empty')}</p>
+            )}
           </div>
-        )}
-      </div>
-    </div>
+          <div className="w-2/3">
+            {selectedCharacter ? (
+              renderCharacterDetail(selectedCharacter)
+            ) : (
+              <div className="flex items-center justify-center h-64 opacity-50">
+                <p>{t('oc.browse.selectPrompt')}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  return (
+    <ToolPageShell
+      title={t('oc.title')}
+      subtitle={t('oc.subtitle')}
+      colorClass="text-primary"
+      emoji="🎨"
+    >
+      {shellContent}
+    </ToolPageShell>
   );
 }

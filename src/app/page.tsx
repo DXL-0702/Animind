@@ -14,15 +14,15 @@ export default function HomePage() {
       <div className="relative h-[50vh] min-h-[360px] overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-[center_30%]"
-          style={{ backgroundImage: "url('/banner.png')" }}
+          style={{ backgroundImage: "url('/banner.jpeg')" }}
         />
         <div className="absolute inset-0 banner-overlay" />
         <div className="relative z-10 flex items-center justify-center h-full">
           <header className="text-center px-4">
-            <h1 className="text-4xl md:text-5xl font-bold mb-3 text-[#5C4033]">
+            <h1 className="text-4xl md:text-5xl font-bold mb-3 text-neutral">
               {t('home.hero.welcome')}
             </h1>
-            <p className="text-lg text-[#5C4033]/70">{t('home.hero.desc')}</p>
+            <p className="text-lg text-neutral/70">{t('home.hero.desc')}</p>
           </header>
         </div>
       </div>

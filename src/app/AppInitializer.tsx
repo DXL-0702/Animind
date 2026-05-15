@@ -7,6 +7,7 @@ import { checkIsAdmin } from '@/lib/auth/supabase-auth';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import LocaleSwitcher from '@/components/ui/LocaleSwitcher';
+import ToastContainer from '@/components/ui/ToastContainer';
 
 export default function AppInitializer() {
   const { theme, locale, setUserId, setIsAdmin } = useAppStore();
@@ -18,8 +19,15 @@ export default function AppInitializer() {
   }, [theme, locale]);
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    if (!('serviceWorker' in navigator)) return;
+
+    if (process.env.NODE_ENV === 'production') {
       navigator.serviceWorker.register('/sw.js');
+    } else {
+      // Dev mode: unregister any existing SW to avoid stale cache issues
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => r.unregister());
+      });
     }
   }, []);
 
@@ -104,8 +112,11 @@ export default function AppInitializer() {
   }, [router, setUserId, setIsAdmin]);
 
   return (
-    <div className="fixed top-3 right-3 z-50 flex items-center gap-1">
-      <LocaleSwitcher />
-    </div>
+    <>
+      <div className="fixed top-3 right-3 z-50 flex items-center gap-1">
+        <LocaleSwitcher />
+      </div>
+      <ToastContainer />
+    </>
   );
 }

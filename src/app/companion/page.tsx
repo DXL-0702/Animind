@@ -14,6 +14,8 @@ import { startGreetingScheduler } from '@/lib/companion/scheduler';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppStore } from '@/stores/app-store';
 import CompanionVoiceButton from '@/components/multimodal/CompanionVoiceButton';
+import { useToast } from '@/hooks/useToast';
+import Link from 'next/link';
 import type { Character, Message } from '@/lib/dal/types';
 
 export default function CompanionPage() {
@@ -26,6 +28,8 @@ export default function CompanionPage() {
   const [loading, setLoading] = useState(false);
   const [relationship, setRelationship] = useState<any>(null);
   const [lastUserMessageTime, setLastUserMessageTime] = useState<number>(Date.now());
+  const { error: toastError } = useToast();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -39,7 +43,6 @@ export default function CompanionPage() {
     }
   }, [selectedCharacter]);
 
-  // Proactive greeting on page load
   useEffect(() => {
     if (!selectedCharacter?.id || !relationship?.id || !userId) return;
     let cancelled = false;
@@ -66,9 +69,8 @@ export default function CompanionPage() {
     })();
 
     return () => { cancelled = true; };
-  }, [selectedCharacter?.id, relationship?.id, userId]);
+  }, [selectedCharacter?.id, relationship?.id, userId, locale]);
 
-  // Silence detection (every 60s)
   useEffect(() => {
     if (!selectedCharacter?.id || !userId) return;
 
@@ -95,7 +97,6 @@ export default function CompanionPage() {
     return () => clearInterval(interval);
   }, [selectedCharacter?.id, lastUserMessageTime, userId]);
 
-  // Scheduled greeting scheduler
   useEffect(() => {
     if (!selectedCharacter?.id || !userId) return;
 
@@ -163,7 +164,6 @@ export default function CompanionPage() {
     if (!confirm(confirmMsg)) return;
 
     try {
-      // Cascade soft-delete: messages, memories, relationship, then character
       await dal.messages.deleteByCharacterId(charId);
 
       const memories = await dal.memories.getByCharacterId(charId);
@@ -192,7 +192,7 @@ export default function CompanionPage() {
       }
     } catch (error) {
       console.error('Failed to delete character:', error);
-      alert(t('companion.delete.fail'));
+      toastError(t('companion.delete.fail'));
     }
   };
 
@@ -258,7 +258,7 @@ export default function CompanionPage() {
       await loadRelationship();
     } catch (error) {
       console.error('Chat failed:', error);
-      alert(t('companion.fail'));
+      toastError(t('companion.fail'));
     } finally {
       setLoading(false);
     }
@@ -269,7 +269,7 @@ export default function CompanionPage() {
       <div className="min-h-screen theme-bg flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">{t('companion.empty')}</h2>
-          <a href="/oc-generator" className="btn btn-primary">{t('companion.create')}</a>
+          <Link href="/oc-generator" className="btn btn-primary">{t('companion.create')}</Link>
         </div>
       </div>
     );
@@ -277,30 +277,48 @@ export default function CompanionPage() {
 
   return (
     <div className="min-h-screen theme-bg">
-      <div className="container mx-auto p-4 h-screen flex flex-col">
-        <div className="mb-4">
-          <a href="/" className="btn btn-ghost btn-sm">{t('nav.back')}</a>
+      <div className="container mx-auto p-4 h-[calc(100dvh-80px)] flex flex-col">
+        <div className="mb-4 flex items-center gap-2">
+          <Link href="/" className="btn btn-ghost btn-sm">{t('nav.back')}</Link>
+          <button
+            className="btn btn-ghost btn-sm lg:hidden"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            ☰ {t('companion.title')}
+          </button>
         </div>
 
-        <div className="flex-1 flex gap-4 overflow-hidden">
-          <div className="w-64 bg-base-100 rounded-lg shadow-xl p-4 overflow-y-auto">
-            <h2 className="font-bold mb-4">{t('companion.title')}</h2>
+        <div className="flex-1 flex gap-4 overflow-hidden relative">
+          {/* Mobile sidebar backdrop */}
+          {sidebarOpen && (
+            <div
+              className="fixed inset-0 z-30 bg-neutral/20 backdrop-blur-sm lg:hidden transition-opacity"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+          {/* Character sidebar - collapsible on mobile */}
+          <div className={`${sidebarOpen ? 'fixed inset-y-0 left-0 z-40 bg-base-100 p-4 w-64 shadow-2xl transition-transform duration-300 ease-out translate-x-0' : 'fixed inset-y-0 left-0 z-40 bg-base-100 p-4 w-64 shadow-2xl transition-transform duration-300 ease-out -translate-x-full'} lg:static lg:block lg:translate-x-0 lg:w-64 lg:bg-base-100 lg:rounded-xl lg:shadow-xl lg:p-4 lg:overflow-y-auto`}>
+            <div className="flex items-center justify-between lg:hidden mb-4">
+              <h2 className="font-bold">{t('companion.title')}</h2>
+              <button className="btn btn-ghost btn-sm" onClick={() => setSidebarOpen(false)}>✕</button>
+            </div>
+            <h2 className="font-bold mb-4 hidden lg:block">{t('companion.title')}</h2>
             {characters.map(char => (
               <div
                 key={char.id}
                 className={`group flex items-center w-full rounded-lg mb-2 ${
-                  selectedCharacter?.id === char.id ? 'bg-primary text-white' : 'hover:bg-base-200'
+                  selectedCharacter?.id === char.id ? 'bg-primary text-primary-content' : 'hover:bg-base-200 active:bg-base-300'
                 }`}
               >
                 <button
-                  className="flex-1 text-left p-3"
-                  onClick={() => setSelectedCharacter(char)}
+                  className="flex-1 text-left p-3 rounded-lg focus-visible:ring-2 focus-visible:ring-primary/50"
+                  onClick={() => { setSelectedCharacter(char); setSidebarOpen(false); }}
                 >
                   {char.name}
                 </button>
                 <button
-                  className={`btn btn-ghost btn-xs opacity-0 group-hover:opacity-100 mr-1 ${
-                    selectedCharacter?.id === char.id ? 'text-white hover:bg-white/20' : ''
+                  className={`btn btn-ghost btn-xs opacity-0 group-hover:opacity-100 mr-1 active:scale-90 transition-transform ${
+                    selectedCharacter?.id === char.id ? 'text-primary-content hover:bg-primary-content/20' : ''
                   }`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -313,7 +331,8 @@ export default function CompanionPage() {
             ))}
           </div>
 
-          <div className="flex-1 bg-base-100 rounded-lg shadow-xl flex flex-col">
+          {/* Chat area */}
+          <div className="flex-1 bg-base-100 rounded-xl shadow-xl flex flex-col min-w-0">
             <div className="p-4 border-b">
               <div className="flex items-center justify-between">
                 <div>
@@ -337,12 +356,12 @@ export default function CompanionPage() {
               {messages.map(msg => (
                 <div
                   key={msg.id}
-                  className={`chat ${msg.role === 'user' ? 'chat-end' : 'chat-start'}`}
+                  className={`chat ${msg.role === 'user' ? 'chat-end' : 'chat-start'} message-enter`}
                 >
-                  <div className="chat-header">
+                  <div className="chat-header opacity-70 text-xs">
                     {msg.role === 'user' ? t('companion.you') : selectedCharacter?.name}
                   </div>
-                  <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-primary' : ''}`}>
+                  <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-primary' : 'bg-base-200 text-base-content'}`}>
                     {msg.content}
                   </div>
                   {msg.role === 'assistant' && (
@@ -362,7 +381,7 @@ export default function CompanionPage() {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  className="input input-bordered flex-1"
+                  className="input input-bordered flex-1 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:outline-none transition-all"
                   placeholder={t('companion.input.placeholder')}
                   value={input}
                   onChange={e => setInput(e.target.value)}
@@ -370,7 +389,7 @@ export default function CompanionPage() {
                   disabled={loading}
                 />
                 <button
-                  className={`btn btn-primary ${loading ? 'loading' : ''}`}
+                  className={`btn btn-primary ${loading ? 'loading' : ''} active:scale-[0.97] transition-transform focus-visible:ring-2 focus-visible:ring-offset-2`}
                   onClick={handleSend}
                   disabled={loading || !input.trim()}
                 >

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const tools = [
@@ -53,18 +54,19 @@ export default function ToolCardGrid() {
   return (
     <section className="w-full lg:w-1/2">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {tools.map((tool) => (
-          <a
+        {tools.map((tool, i) => (
+          <Link
             key={tool.href}
             href={tool.href}
-            className="bg-base-100/80 backdrop-blur-sm rounded-xl p-5 border border-base-300/50 hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 ease-out"
+            className="bg-base-100/80 backdrop-blur-sm rounded-xl p-5 border border-base-300/50 shadow-md hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 active:scale-[0.98] transition-all duration-300 ease-out will-change-transform"
+            style={{ animationDelay: `${i * 50}ms` }}
           >
             <div className="text-3xl mb-3">{tool.icon}</div>
             <h3 className={`text-lg font-bold mb-2 ${tool.colorClass}`}>
               {t(tool.nameKey)}
             </h3>
             <p className="text-sm opacity-60">{t(tool.descKey)}</p>
-          </a>
+          </Link>
         ))}
       </div>
     </section>

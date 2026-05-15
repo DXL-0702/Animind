@@ -39,6 +39,17 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() =>
+        caches.match(event.request).then((cached) => {
+          if (cached) return cached;
+          // If not in cache either, return a graceful fallback or re-throw
+          // In dev mode, it's better to just let the browser handle the error
+          return new Response('Offline — content not cached', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: { 'Content-Type': 'text/plain' },
+          });
+        })
+      )
   );
 });

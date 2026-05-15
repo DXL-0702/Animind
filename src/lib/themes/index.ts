@@ -16,14 +16,14 @@ export interface ThemeMeta {
 export const THEMES: ThemeMeta[] = [
   {
     id: 'animind',
-    label_zh: '暖光日系',
-    label_ja: 'ウォーム和風',
-    description_zh: '温暖柔和的日系插画风格',
-    description_ja: '温かく柔らかな和風イラストスタイル',
+    label_zh: '红白巫女',
+    label_ja: '紅白巫女',
+    description_zh: '樱花粉白与巫女红交织的插画风格',
+    description_ja: '桜の淡い白と巫女の赤が重なるイラストスタイル',
     mascotPath: '/mascots/animind.svg',
-    gradientFrom: '#FFF8F0',
-    gradientVia: '#FFF0E0',
-    gradientTo: '#F5E1CC',
-    colors: ['#D4845C', '#E8A87C', '#C9A961'],
+    gradientFrom: '#FFF8F8',
+    gradientVia: '#FFF0F0',
+    gradientTo: '#F5D8D8',
+    colors: ['#D04050', '#F0D0D8', '#D8B050'],
   },
 ];

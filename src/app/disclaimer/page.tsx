@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export default function DisclaimerPage() {
@@ -82,7 +83,7 @@ export default function DisclaimerPage() {
           </div>
 
           <div className="text-center mt-8">
-            <a href="/" className="btn btn-primary">{t('disclaimer.agree')}</a>
+            <Link href="/" className="btn btn-primary">{t('disclaimer.agree')}</Link>
           </div>
         </div>
       </div>

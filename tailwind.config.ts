@@ -2,7 +2,6 @@ import type { Config } from "tailwindcss";
 
 export default {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
@@ -19,13 +18,13 @@ export default {
     themes: [
       {
         animind: {
-          "primary": "#D4845C",
-          "secondary": "#E8A87C",
-          "accent": "#C9A961",
-          "neutral": "#5C4033",
-          "base-100": "#FFF8F0",
-          "base-200": "#FFF0E0",
-          "base-300": "#F5E1CC",
+          "primary": "#D04050",
+          "secondary": "#F0D0D8",
+          "accent": "#D8B050",
+          "neutral": "#3A2030",
+          "base-100": "#FFF8F8",
+          "base-200": "#FFF0F0",
+          "base-300": "#F5D8D8",
           "info": "#7EB8C9",
           "success": "#8DB580",
           "warning": "#E8C170",

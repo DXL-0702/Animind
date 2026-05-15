@@ -58,7 +58,7 @@ export default function UsageStatsSidebar() {
 
   return (
     <aside className="w-full lg:w-1/4 lg:sticky lg:top-4 lg:self-start">
-      <div className="bg-base-100/70 backdrop-blur-sm rounded-2xl p-4">
+      <div className="bg-base-100/70 backdrop-blur-sm rounded-2xl p-4 shadow-md">
         {/* Title */}
         <h3 className="text-lg font-bold mb-3 text-center">
           {t('home.stats.title')}
@@ -67,20 +67,20 @@ export default function UsageStatsSidebar() {
         {/* Mode toggle */}
         <div className="flex rounded-lg bg-base-200/50 p-0.5 mb-3">
           <button
-            className={`flex-1 text-xs py-1.5 rounded-md transition-colors ${
+            className={`flex-1 text-xs py-1.5 rounded-lg transition-colors ${
               mode === 'global'
                 ? 'bg-primary text-primary-content shadow-sm'
-                : 'hover:bg-base-300/50'
+                : 'hover:bg-base-300/50 active:scale-[0.97]'
             }`}
             onClick={() => setMode('global')}
           >
             {t('home.stats.globalRanking')}
           </button>
           <button
-            className={`flex-1 text-xs py-1.5 rounded-md transition-colors ${
+            className={`flex-1 text-xs py-1.5 rounded-lg transition-colors ${
               mode === 'personal'
                 ? 'bg-primary text-primary-content shadow-sm'
-                : 'hover:bg-base-300/50'
+                : 'hover:bg-base-300/50 active:scale-[0.97]'
             }`}
             onClick={() => setMode('personal')}
           >
@@ -93,10 +93,10 @@ export default function UsageStatsSidebar() {
           {timeRanges.map((tr) => (
             <button
               key={String(tr.value)}
-              className={`flex-1 text-xs py-1 rounded-md transition-colors ${
+              className={`flex-1 text-xs py-1 rounded-lg transition-colors ${
                 timeRange === tr.value
                   ? 'bg-base-300 font-semibold'
-                  : 'hover:bg-base-200'
+                  : 'hover:bg-base-200 active:scale-[0.97]'
               }`}
               onClick={() => setTimeRange(tr.value)}
             >
