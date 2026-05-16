@@ -81,9 +81,9 @@ export async function generateProactiveMessage(
 }
 
 // 沉默检测（用户在页面但不说话）
-export function detectSilence(lastUserMessageTime: number): boolean {
+export function detectSilence(lastUserMessageTime: number, thresholdMinutes: number = 6): boolean {
   const silenceMinutes = (Date.now() - lastUserMessageTime) / (1000 * 60);
-  return silenceMinutes >= 5; // 5分钟沉默
+  return silenceMinutes >= thresholdMinutes;
 }
 
 // 生成沉默打破消息（LLM驱动，模板兜底）
@@ -105,6 +105,12 @@ export async function generateSilenceBreaker(
   } catch { /* ignore */ }
 
   try {
+    const recentMessages = await dal.messages.getByCharacterId(characterId, {
+      orderBy: 'created_at',
+      orderDirection: 'desc',
+      limit: 4,
+    });
+
     const response = await llmClient.chat({
       messages: [
         {
@@ -114,6 +120,7 @@ export async function generateSilenceBreaker(
             personalityTraits: traits,
             trustStage: relationship?.trust_stage || 'stranger',
             emotionState: relationship?.emotion_state || 'neutral',
+            recentMessages: recentMessages.reverse().map(m => `${m.role}: ${m.content}`),
           }, locale),
         },
         { role: 'user', content: '生成沉默打破消息' },
@@ -128,11 +135,11 @@ export async function generateSilenceBreaker(
     console.error('Silence breaker LLM failed, fallback to template:', error);
     // LLM 失败时回退到模板
     const fallbackTemplates = [
-      '在想什么呢？',
-      '怎么不说话了？',
-      '有什么心事吗？',
-      '要不要聊聊天？',
-      '我在这里哦~',
+      '刚才想到这里的时候，我突然觉得这种安静也挺舒服的。',
+      '窗外的光如果再柔一点，应该很适合慢慢整理心情。',
+      '有时候不用急着说话，安静待一会儿也很好。',
+      '我刚刚还在想，今天的气氛其实挺适合放松一下。',
+      '这种慢下来的感觉，偶尔也让人觉得安心。',
     ];
     return fallbackTemplates[Math.floor(Math.random() * fallbackTemplates.length)];
   }

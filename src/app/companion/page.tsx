@@ -30,6 +30,8 @@ export default function CompanionPage() {
   const [lastUserMessageTime, setLastUserMessageTime] = useState<number>(Date.now());
   const { error: toastError } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const silenceBreakerRunningRef = useRef(false);
+  const lastSilenceBreakerAtRef = useRef(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -40,6 +42,9 @@ export default function CompanionPage() {
     if (selectedCharacter) {
       loadMessages();
       loadRelationship();
+      setLastUserMessageTime(Date.now());
+      silenceBreakerRunningRef.current = false;
+      lastSilenceBreakerAtRef.current = 0;
     }
   }, [selectedCharacter]);
 
@@ -75,8 +80,11 @@ export default function CompanionPage() {
     if (!selectedCharacter?.id || !userId) return;
 
     const interval = setInterval(async () => {
-      if (!detectSilence(lastUserMessageTime)) return;
+      if (loading || silenceBreakerRunningRef.current) return;
+      if (!detectSilence(lastUserMessageTime, 6)) return;
+      if (Date.now() - lastSilenceBreakerAtRef.current < 10 * 60 * 1000) return;
 
+      silenceBreakerRunningRef.current = true;
       try {
         const breaker = await generateSilenceBreaker(selectedCharacter.id, userId, locale as 'zh-CN' | 'ja-JP');
         const msg = await dal.messages.create({
@@ -88,14 +96,18 @@ export default function CompanionPage() {
           deleted_at: null,
         });
         setMessages(prev => [...prev, msg]);
-        setLastUserMessageTime(Date.now());
+        const now = Date.now();
+        setLastUserMessageTime(now);
+        lastSilenceBreakerAtRef.current = now;
       } catch (e) {
         console.error('Silence breaker failed:', e);
+      } finally {
+        silenceBreakerRunningRef.current = false;
       }
     }, 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [selectedCharacter?.id, lastUserMessageTime, userId]);
+  }, [selectedCharacter?.id, lastUserMessageTime, userId, locale, loading]);
 
   useEffect(() => {
     if (!selectedCharacter?.id || !userId) return;
