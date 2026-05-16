@@ -22,9 +22,9 @@ export default function AuthCallbackPage() {
 
         const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token');
-        const tokenHash = queryParams.get('token_hash');
-        const code = queryParams.get('code');
-        const type = queryParams.get('type');
+        const tokenHash = hashParams.get('token_hash') || queryParams.get('token_hash');
+        const code = hashParams.get('code') || queryParams.get('code');
+        const type = hashParams.get('type') || queryParams.get('type');
 
         console.log('[AuthCallback] Processing auth callback', {
           hasAccessToken: !!accessToken,
@@ -33,6 +33,8 @@ export default function AuthCallbackPage() {
           hasCode: !!code,
           type
         });
+
+        const isRecovery = type === 'recovery';
 
         // 如果有 code（PKCE authorization code flow），交换 session
         if (code) {
@@ -86,8 +88,13 @@ export default function AuthCallbackPage() {
 
         // 等待一下让 session 完全建立，然后跳转
         setTimeout(() => {
-          console.log('[AuthCallback] Redirecting to home');
-          router.push('/');
+          if (isRecovery) {
+            console.log('[AuthCallback] Redirecting to reset password');
+            router.push('/reset-password');
+          } else {
+            console.log('[AuthCallback] Redirecting to home');
+            router.push('/');
+          }
         }, 500);
 
       } catch (err) {
@@ -120,7 +127,7 @@ export default function AuthCallbackPage() {
           {status === 'success' && (
             <>
               <div className="text-6xl mb-4">✓</div>
-              <h2 className="card-title text-success">登录成功！</h2>
+              <h2 className="card-title text-success">验证成功！</h2>
               <p className="text-sm opacity-70">正在跳转...</p>
             </>
           )}

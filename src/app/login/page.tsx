@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signInWithOTP, signInWithPassword, verifyOTP } from '@/lib/auth/supabase-auth';
+import { resetPasswordForEmail, signInWithOTP, signInWithPassword } from '@/lib/auth/supabase-auth';
 
 type LoginMode = 'user' | 'admin';
 
@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailSent, setEmailSent] = useState(false);
+  const [adminResetSent, setAdminResetSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +27,25 @@ export default function LoginPage() {
       setError('登录链接已发送到您的邮箱，请点击邮件中的链接完成登录');
     } catch (err) {
       setError(err instanceof Error ? err.message : '发送失败，请重试');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResetPassword() {
+    if (!email.trim()) {
+      setError('请先输入管理员邮箱');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setAdminResetSent(false);
+    try {
+      await resetPasswordForEmail(email.trim());
+      setAdminResetSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '发送重置邮件失败');
     } finally {
       setLoading(false);
     }
@@ -177,6 +197,12 @@ export default function LoginPage() {
                 </div>
               )}
 
+              {adminResetSent && (
+                <div className="alert alert-success py-2 text-sm">
+                  <span>密码重置邮件已发送，请前往邮箱点击链接设置新密码</span>
+                </div>
+              )}
+
               <button
                 type="submit"
                 className="btn btn-primary w-full mt-1 tap-feedback"
@@ -184,6 +210,28 @@ export default function LoginPage() {
               >
                 {loading ? <span className="loading loading-spinner loading-sm" /> : '管理员登录'}
               </button>
+
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm tap-feedback"
+                onClick={handleResetPassword}
+                disabled={loading || adminResetSent}
+              >
+                {adminResetSent ? '已发送重置邮件' : '忘记密码？发送重置邮件'}
+              </button>
+
+              {adminResetSent && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-xs tap-feedback"
+                  onClick={() => {
+                    setAdminResetSent(false);
+                    setError(null);
+                  }}
+                >
+                  重新发送
+                </button>
+              )}
             </form>
           )}
         </div>

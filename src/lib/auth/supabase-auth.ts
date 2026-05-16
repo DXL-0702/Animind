@@ -20,6 +20,19 @@ export async function signInWithOTP(email: string) {
   if (error) throw error;
 }
 
+// 发送密码重置邮件
+export async function resetPasswordForEmail(email: string) {
+  const supabase = getSupabaseBrowserClient();
+  const redirectTo = typeof window !== 'undefined'
+    ? `${window.location.origin}/auth/callback`
+    : undefined;
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  });
+  if (error) throw error;
+}
+
 // 用户邮箱验证码登录 - 验证 OTP
 export async function verifyOTP(email: string, token: string) {
   const supabase = getSupabaseBrowserClient();
