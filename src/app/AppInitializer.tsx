@@ -3,15 +3,22 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/stores/app-store';
-import { checkIsAdmin } from '@/lib/auth/supabase-auth';
+import { checkIsAdmin, logout } from '@/lib/auth/supabase-auth';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import LocaleSwitcher from '@/components/ui/LocaleSwitcher';
 import ToastContainer from '@/components/ui/ToastContainer';
 
 export default function AppInitializer() {
-  const { theme, locale, setUserId, setIsAdmin } = useAppStore();
+  const { theme, locale, userId, setUserId, setIsAdmin } = useAppStore();
   const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    setUserId(null);
+    setIsAdmin(false);
+    router.push('/login');
+  };
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -114,8 +121,13 @@ export default function AppInitializer() {
 
   return (
     <>
-      <div className="fixed top-3 right-3 z-50 flex items-center gap-1">
+      <div className="fixed top-3 right-3 z-50 flex items-center gap-2">
         <LocaleSwitcher />
+        {userId && (
+          <button className="btn btn-ghost btn-sm tap-feedback" onClick={handleLogout}>
+            退出登录
+          </button>
+        )}
       </div>
       <ToastContainer />
     </>
