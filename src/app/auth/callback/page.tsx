@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { useAppStore } from '@/stores/app-store';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
+  const setUserId = useAppStore((s) => s.setUserId);
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
 
@@ -21,17 +23,32 @@ export default function AuthCallbackPage() {
         const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token');
         const tokenHash = queryParams.get('token_hash');
+        const code = queryParams.get('code');
         const type = queryParams.get('type');
 
         console.log('[AuthCallback] Processing auth callback', {
           hasAccessToken: !!accessToken,
           hasRefreshToken: !!refreshToken,
           hasTokenHash: !!tokenHash,
+          hasCode: !!code,
           type
         });
 
-        // 如果有 token_hash（PKCE flow），让 Supabase 自动处理
-        if (tokenHash && type) {
+        // 如果有 code（PKCE authorization code flow），交换 session
+        if (code) {
+          console.log('[AuthCallback] Code flow detected, exchanging code for session');
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (exchangeError) {
+            console.error('[AuthCallback] Code exchange failed:', exchangeError);
+            throw exchangeError;
+          }
+
+          console.log('[AuthCallback] Code exchanged successfully:', data.session?.user?.id);
+          if (data.session?.user?.id) setUserId(data.session.user.id);
+        }
+        // 如果有 token_hash（OTP flow），验证 OTP
+        else if (tokenHash && type) {
           console.log('[AuthCallback] PKCE flow detected, verifying OTP');
           const { data, error: verifyError } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
@@ -44,6 +61,7 @@ export default function AuthCallbackPage() {
           }
 
           console.log('[AuthCallback] OTP verified successfully:', data.session?.user?.id);
+          if (data.session?.user?.id) setUserId(data.session.user.id);
         }
         // 如果有 access_token（传统 magic link），设置 session
         else if (accessToken && refreshToken) {
@@ -59,6 +77,7 @@ export default function AuthCallbackPage() {
           }
 
           console.log('[AuthCallback] Session set successfully:', data.session?.user?.id);
+          if (data.session?.user?.id) setUserId(data.session.user.id);
         } else {
           throw new Error('No valid auth tokens found in URL');
         }
