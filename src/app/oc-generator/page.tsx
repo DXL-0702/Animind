@@ -15,11 +15,13 @@ import ToolPageShell from '@/components/layout/ToolPageShell';
 import ToolInputCard from '@/components/layout/ToolInputCard';
 import ImageProviderSelect from '@/components/ui/ImageProviderSelect';
 import { useToast } from '@/hooks/useToast';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
 export default function OCGeneratorPage() {
   const { t, locale } = useTranslation();
   const userId = useAppStore((s) => s.userId);
+  const setUserId = useAppStore((s) => s.setUserId);
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [character, setCharacter] = useState<any>(null);
@@ -115,13 +117,33 @@ export default function OCGeneratorPage() {
     }
   };
 
+  const getCurrentUserId = async (): Promise<string | null> => {
+    if (userId) return userId;
+
+    const supabase = getSupabaseBrowserClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const sessionUserId = session?.user.id ?? null;
+    if (sessionUserId) setUserId(sessionUserId);
+    return sessionUserId;
+  };
+
   const handleSave = async () => {
     if (!character) return;
-    if (!userId) { toastError(t('oc.save.wait')); return; }
     setSaving(true);
     try {
+      const currentUserId = await getCurrentUserId();
+      if (!currentUserId) {
+        toastError(t('oc.save.wait'));
+        return;
+      }
+
+      const existingUser = await dal.users.getById(currentUserId);
+      if (!existingUser) {
+        await dal.users.create({ id: currentUserId, nickname: '', deleted_at: null });
+      }
+
       const newChar = await dal.characters.create({
-        user_id: userId,
+        user_id: currentUserId,
         name: character.name,
         personality: JSON.stringify(character.personality),
         appearance: JSON.stringify(character.appearance),
