@@ -86,7 +86,7 @@ async function pollResult(taskId: string): Promise<string> {
       return `data:image/png;base64,${base64}`;
     }
 
-    if (status !== 'in_queue' && status !== 'generate') {
+    if (status !== 'in_queue' && status !== 'generate' && status !== 'generating') {
       // Error status
       console.error('Jimeng poll error status:', JSON.stringify(data));
       throw new Error(`Task failed with status ${status}: ${data.message || JSON.stringify(data)}`);

@@ -147,7 +147,7 @@ export default function ArtPromptPage() {
               <div className="card-body">
                 <div className="flex justify-between items-center">
                   <h3 className="card-title text-info">🎯 即梦AI提示词</h3>
-                  <button className="btn btn-sm btn-ghost" onClick={() => copyToClipboard(result.jimeng_prompt)}>
+                  <button className="btn btn-sm btn-ghost tap-feedback" onClick={() => copyToClipboard(result.jimeng_prompt)}>
                     📋 {t('art.copy')}
                   </button>
                 </div>
@@ -167,7 +167,7 @@ export default function ArtPromptPage() {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-semibold">{t('art.positive')}</span>
-                  <button className="btn btn-sm btn-ghost" onClick={() => copyToClipboard(result.positive_prompt)}>
+                  <button className="btn btn-sm btn-ghost tap-feedback" onClick={() => copyToClipboard(result.positive_prompt)}>
                     📋 {t('art.copy')}
                   </button>
                 </div>
@@ -178,7 +178,7 @@ export default function ArtPromptPage() {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-semibold">{t('art.negative')}</span>
-                  <button className="btn btn-sm btn-ghost" onClick={() => copyToClipboard(result.negative_prompt)}>
+                  <button className="btn btn-sm btn-ghost tap-feedback" onClick={() => copyToClipboard(result.negative_prompt)}>
                     📋 {t('art.copy')}
                   </button>
                 </div>

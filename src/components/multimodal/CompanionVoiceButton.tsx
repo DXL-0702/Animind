@@ -67,7 +67,7 @@ export default function CompanionVoiceButton({ text, voiceId, sharedAudioRef }: 
 
   return (
     <button
-      className="btn btn-ghost btn-xs btn-circle"
+      className="btn btn-ghost btn-xs btn-circle tap-feedback"
       onClick={handleClick}
       title={isPlaying ? 'Stop' : 'Play voice'}
     >

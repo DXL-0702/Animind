@@ -105,7 +105,7 @@ export default function ToneWriterPage() {
             {TONE_KEYS.map((tk) => (
               <button
                 key={tk}
-                className={`btn btn-sm ${toneKey === tk ? 'btn-secondary' : 'btn-outline'}`}
+                className={`btn btn-sm tap-feedback ${toneKey === tk ? 'btn-secondary' : 'btn-outline'}`}
                 onClick={() => setToneKey(tk)}
               >
                 {t(tk)}
@@ -121,7 +121,7 @@ export default function ToneWriterPage() {
             onChange={(e) => setText(e.target.value)}
           />
           <button
-            className={`btn btn-secondary ${loading ? 'loading' : ''}`}
+            className={`btn btn-secondary tap-feedback ${loading ? 'loading' : ''}`}
             onClick={handleRewrite}
             disabled={loading || !text.trim()}
           >

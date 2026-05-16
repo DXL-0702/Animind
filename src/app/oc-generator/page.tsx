@@ -149,9 +149,9 @@ export default function OCGeneratorPage() {
   };
 
   const renderSaveButton = () => {
-    if (saving) return <button className="btn btn-primary flex-1" disabled>{t('oc.btn.saving')}</button>;
+    if (saving) return <button className="btn btn-primary flex-1 tap-feedback" disabled>{t('oc.btn.saving')}</button>;
     if (savedCharacterId) return <button className="btn btn-success flex-1" disabled>{t('oc.btn.saved')}</button>;
-    return <button className="btn btn-primary flex-1" onClick={handleSave}>💾 {t('oc.btn.save')}</button>;
+    return <button className="btn btn-primary flex-1 tap-feedback" onClick={handleSave}>💾 {t('oc.btn.save')}</button>;
   };
 
   const renderCharacterDetail = (char: any, imageUrl?: string | null, isLive?: boolean) => {
@@ -161,7 +161,7 @@ export default function OCGeneratorPage() {
 
     return (
       <div className="space-y-4">
-        <div className="card bg-base-100 shadow-xl">
+        <div className="card bg-base-100 shadow-md hover:shadow-lg transition-shadow duration-300">
           <div className="card-body">
             <h2 className="text-3xl font-bold text-primary">{char.name}</h2>
             <div className="flex gap-4 text-sm">
@@ -171,7 +171,7 @@ export default function OCGeneratorPage() {
           </div>
         </div>
 
-        <div className="card bg-base-100 shadow-xl">
+        <div className="card bg-base-100 shadow-md hover:shadow-lg transition-shadow duration-300">
           <div className="card-body">
             <h3 className="card-title">{t('oc.section.personality')}</h3>
             <div className="space-y-2">
@@ -205,7 +205,7 @@ export default function OCGeneratorPage() {
           </div>
         </div>
 
-        <div className="card bg-base-100 shadow-xl">
+        <div className="card bg-base-100 shadow-md hover:shadow-lg transition-shadow duration-300">
           <div className="card-body">
             <h3 className="card-title">{t('oc.section.appearance')}</h3>
             {displayImage && (
@@ -225,7 +225,7 @@ export default function OCGeneratorPage() {
                 <div className="flex items-center gap-2 mt-4">
                   <ImageProviderSelect value={imageProvider} onChange={setImageProvider} disabled={imageGenerating} />
                   <button
-                    className="btn btn-accent btn-sm flex-1"
+                    className="btn btn-accent btn-sm flex-1 tap-feedback"
                     onClick={() => {
                       const { prompt: imgPrompt, negative_prompt } = buildCharacterImagePrompt(
                         character.appearance || {},
@@ -257,7 +257,7 @@ export default function OCGeneratorPage() {
           </div>
         </div>
 
-        <div className="card bg-base-100 shadow-xl">
+        <div className="card bg-base-100 shadow-md hover:shadow-lg transition-shadow duration-300">
           <div className="card-body">
             <h3 className="card-title">{t('oc.section.backstory')}</h3>
             <p className="leading-relaxed">{char.backstory}</p>
@@ -265,7 +265,7 @@ export default function OCGeneratorPage() {
         </div>
 
         {(char.relationships || char.goals) && (
-          <div className="card bg-base-100 shadow-xl">
+          <div className="card bg-base-100 shadow-md hover:shadow-lg transition-shadow duration-300">
             <div className="card-body">
               <h3 className="card-title">{t('oc.section.relations')}</h3>
               <div className="space-y-2">

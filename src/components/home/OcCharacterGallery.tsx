@@ -64,7 +64,7 @@ export default function OcCharacterGallery() {
   if (!userId || !loaded || characters.length === 0) {
     return (
       <aside className="w-full lg:w-1/4 lg:sticky lg:top-4 lg:self-start">
-        <div className="bg-base-100/70 backdrop-blur-sm rounded-2xl p-6 hover:scale-[1.02] hover:shadow-md transition-all duration-300">
+        <div className="bg-base-100/70 backdrop-blur-sm rounded-2xl p-5 hover:scale-[1.02] hover:shadow-md transition-all duration-300">
           <div className="flex justify-center mb-6">
             <ThemeMascot size="lg" />
           </div>

@@ -11,7 +11,7 @@ export default function LocaleSwitcher() {
 
   return (
     <button
-      className="btn btn-ghost btn-sm"
+      className="btn btn-ghost btn-sm tap-feedback"
       onClick={toggle}
       aria-label={locale === 'zh-CN' ? '切换语言' : '言語切替'}
     >

@@ -19,7 +19,7 @@ export default function VoicePlayer({ text, voiceType }: VoicePlayerProps) {
   return (
     <div className="flex items-center gap-3 mt-3">
       {!audioUrl && !isGenerating && (
-        <button className="btn btn-sm btn-outline btn-secondary" onClick={handleGenerate}>
+        <button className="btn btn-sm btn-outline btn-secondary tap-feedback" onClick={handleGenerate}>
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
             <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
@@ -41,7 +41,7 @@ export default function VoicePlayer({ text, voiceType }: VoicePlayerProps) {
         <div className="flex items-center gap-3">
           {isPlaying ? (
             <>
-              <button className="btn btn-sm btn-secondary" onClick={pause} aria-label={t('tone.voice.pause')}>
+              <button className="btn btn-sm btn-secondary tap-feedback" onClick={pause} aria-label={t('tone.voice.pause')}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                   <rect x="6" y="4" width="4" height="16" rx="1" />
                   <rect x="14" y="4" width="4" height="16" rx="1" />
@@ -55,19 +55,19 @@ export default function VoicePlayer({ text, voiceType }: VoicePlayerProps) {
               </div>
             </>
           ) : (
-            <button className="btn btn-sm btn-secondary" onClick={play} aria-label={t('tone.voice.play')}>
+            <button className="btn btn-sm btn-secondary tap-feedback" onClick={play} aria-label={t('tone.voice.play')}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="5,3 19,12 5,21" />
               </svg>
               {t('tone.voice.play')}
             </button>
           )}
-          <button className="btn btn-sm btn-outline btn-ghost" onClick={stop} aria-label={t('tone.voice.stop')}>
+          <button className="btn btn-sm btn-outline btn-ghost tap-feedback" onClick={stop} aria-label={t('tone.voice.stop')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
               <rect x="4" y="4" width="16" height="16" rx="2" />
             </svg>
           </button>
-          <button className="btn btn-sm btn-outline btn-ghost" onClick={handleGenerate}>
+          <button className="btn btn-sm btn-outline btn-ghost tap-feedback" onClick={handleGenerate}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="23,4 23,10 17,10" />
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />

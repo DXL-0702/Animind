@@ -114,7 +114,7 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                className="btn btn-primary w-full mt-1"
+                className="btn btn-primary w-full mt-1 tap-feedback"
                 disabled={loading || emailSent}
               >
                 {loading ? (
@@ -129,7 +129,7 @@ export default function LoginPage() {
               {emailSent && (
                 <button
                   type="button"
-                  className="btn btn-ghost btn-sm"
+                  className="btn btn-ghost btn-sm tap-feedback"
                   onClick={() => {
                     setEmailSent(false);
                     setError(null);
@@ -179,7 +179,7 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                className="btn btn-primary w-full mt-1"
+                className="btn btn-primary w-full mt-1 tap-feedback"
                 disabled={loading}
               >
                 {loading ? <span className="loading loading-spinner loading-sm" /> : '管理员登录'}

@@ -14,16 +14,40 @@ export const DEFAULT_GREETINGS: ScheduledGreeting[] = [
   { time: '22:00', message: '该休息了，晚安~', enabled: true },
 ];
 
-// 检查是否到达问候时间
+// 当天已触发的问候时间（内存记录，每天0点重置）
+const triggeredToday = new Set<string>();
+let lastResetDate = '';
+
+function resetIfNewDay(): void {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  if (today !== lastResetDate) {
+    triggeredToday.clear();
+    lastResetDate = today;
+  }
+}
+
+// 检查是否到达问候时间（±5分钟窗口，当天去重）
 export function checkScheduledGreeting(): ScheduledGreeting | null {
+  resetIfNewDay();
+
   const now = new Date();
-  const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const greeting = DEFAULT_GREETINGS.find(
-    g => g.enabled && g.time === currentTime
-  );
+  for (const greeting of DEFAULT_GREETINGS) {
+    if (!greeting.enabled) continue;
+    if (triggeredToday.has(greeting.time)) continue;
 
-  return greeting || null;
+    const [hours, minutes] = greeting.time.split(':').map(Number);
+    const greetingMinutes = hours * 60 + minutes;
+    const diff = Math.abs(currentMinutes - greetingMinutes);
+
+    if (diff <= 5) {
+      triggeredToday.add(greeting.time);
+      return greeting;
+    }
+  }
+
+  return null;
 }
 
 // 获取下一个问候时间
@@ -34,12 +58,12 @@ export function getNextGreetingTime(): Date | null {
   const enabledGreetings = DEFAULT_GREETINGS.filter(g => g.enabled);
   if (enabledGreetings.length === 0) return null;
 
-  // 找到下一个问候时间
+  // 找到下一个未触发的问候时间
   for (const greeting of enabledGreetings) {
     const [hours, minutes] = greeting.time.split(':').map(Number);
     const greetingMinutes = hours * 60 + minutes;
 
-    if (greetingMinutes > currentMinutes) {
+    if (greetingMinutes > currentMinutes + 5) {
       const nextTime = new Date(now);
       nextTime.setHours(hours, minutes, 0, 0);
       return nextTime;

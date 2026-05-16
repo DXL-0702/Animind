@@ -78,7 +78,7 @@ export default function CompanionPage() {
       if (!detectSilence(lastUserMessageTime)) return;
 
       try {
-        const breaker = await generateSilenceBreaker(selectedCharacter.id);
+        const breaker = await generateSilenceBreaker(selectedCharacter.id, userId, locale as 'zh-CN' | 'ja-JP');
         const msg = await dal.messages.create({
           character_id: selectedCharacter.id,
           user_id: userId,
@@ -269,7 +269,7 @@ export default function CompanionPage() {
       <div className="min-h-screen theme-bg flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">{t('companion.empty')}</h2>
-          <Link href="/oc-generator" className="btn btn-primary">{t('companion.create')}</Link>
+          <Link href="/oc-generator" className="btn btn-primary tap-feedback">{t('companion.create')}</Link>
         </div>
       </div>
     );
@@ -279,9 +279,9 @@ export default function CompanionPage() {
     <div className="min-h-screen theme-bg">
       <div className="container mx-auto p-4 h-[calc(100dvh-80px)] flex flex-col">
         <div className="mb-4 flex items-center gap-2">
-          <Link href="/" className="btn btn-ghost btn-sm">{t('nav.back')}</Link>
+          <Link href="/" className="btn btn-ghost btn-sm tap-feedback">{t('nav.back')}</Link>
           <button
-            className="btn btn-ghost btn-sm lg:hidden"
+            className="btn btn-ghost btn-sm lg:hidden tap-feedback"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
             ☰ {t('companion.title')}
@@ -300,7 +300,7 @@ export default function CompanionPage() {
           <div className={`${sidebarOpen ? 'fixed inset-y-0 left-0 z-40 bg-base-100 p-4 w-64 shadow-2xl transition-transform duration-300 ease-out translate-x-0' : 'fixed inset-y-0 left-0 z-40 bg-base-100 p-4 w-64 shadow-2xl transition-transform duration-300 ease-out -translate-x-full'} lg:static lg:block lg:translate-x-0 lg:w-64 lg:bg-base-100 lg:rounded-xl lg:shadow-xl lg:p-4 lg:overflow-y-auto`}>
             <div className="flex items-center justify-between lg:hidden mb-4">
               <h2 className="font-bold">{t('companion.title')}</h2>
-              <button className="btn btn-ghost btn-sm" onClick={() => setSidebarOpen(false)}>✕</button>
+              <button className="btn btn-ghost btn-sm tap-feedback" onClick={() => setSidebarOpen(false)}>✕</button>
             </div>
             <h2 className="font-bold mb-4 hidden lg:block">{t('companion.title')}</h2>
             {characters.map(char => (
@@ -375,6 +375,16 @@ export default function CompanionPage() {
                   )}
                 </div>
               ))}
+              {loading && (
+                <div className="chat chat-start message-enter">
+                  <div className="chat-header opacity-70 text-xs">{selectedCharacter?.name}</div>
+                  <div className="chat-bubble bg-base-200 text-base-content flex items-center gap-1">
+                    <span className="typing-dot w-2 h-2 rounded-full bg-primary/60" />
+                    <span className="typing-dot w-2 h-2 rounded-full bg-primary/60" />
+                    <span className="typing-dot w-2 h-2 rounded-full bg-primary/60" />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="p-4 border-t">

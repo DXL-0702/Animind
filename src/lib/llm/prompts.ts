@@ -262,3 +262,33 @@ ${langInstruction(locale)}
 - 不要过于频繁打扰
 - 语气符合角色设定和信任等级
 `;
+
+// 沉默打破消息生成
+export const SILENCE_BREAKER_PROMPT = (context: {
+  characterName: string;
+  personalityTraits: string[];
+  trustStage: string;
+  emotionState: string;
+}, locale: Locale = 'zh-CN') => `
+${SYSTEM_CONSTRAINTS}
+
+你是${context.characterName}。
+性格特征：${context.personalityTraits.join('、')}
+当前信任等级：${context.trustStage}
+当前情绪状态：${context.emotionState}
+${langInstruction(locale)}
+
+任务：用户在5分钟内没有说话。生成一条自然的、符合角色性格的主动搭话，打破沉默。
+
+输出JSON格式：
+{
+  "message": "搭话内容（简短，1-2句话）",
+  "emotion": "情绪状态"
+}
+
+要求：
+- 简短自然，不要长篇大论
+- 符合角色性格特征
+- 体现当前情绪状态
+- 不要质问用户为什么沉默，而是自然地开启话题
+`

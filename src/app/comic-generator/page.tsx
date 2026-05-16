@@ -173,13 +173,13 @@ export default function ComicGeneratorPage() {
               disabled={!!imageGenProgress}
             />
             <button
-              className={`btn btn-accent flex-1 ${imageGenProgress ? 'loading' : ''}`}
+              className={`btn btn-accent flex-1 tap-feedback ${imageGenProgress ? 'loading' : ''}`}
               onClick={handleGenerateArt}
               disabled={!!imageGenProgress}
             >
               {imageGenProgress || `🎨 ${t('comic.btn.art')}`}
             </button>
-            <button className="btn btn-outline flex-1" onClick={() => setComic(null)}>
+            <button className="btn btn-outline flex-1 tap-feedback" onClick={() => setComic(null)}>
               🔄 {t('comic.btn.regenerate')}
             </button>
           </div>

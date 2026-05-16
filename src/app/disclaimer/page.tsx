@@ -83,7 +83,7 @@ export default function DisclaimerPage() {
           </div>
 
           <div className="text-center mt-8">
-            <Link href="/" className="btn btn-primary">{t('disclaimer.agree')}</Link>
+            <Link href="/" className="btn btn-primary tap-feedback">{t('disclaimer.agree')}</Link>
           </div>
         </div>
       </div>

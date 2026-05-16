@@ -35,8 +35,9 @@ export default function AppInitializer() {
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
 
-    // 检查 URL 中是否有 magic link token（避免在验证完成前重定向）
+    // 检查 URL 中是否有 magic link token 或当前在 auth callback 页面
     const isAuthCallback = typeof window !== 'undefined' && (
+      window.location.pathname.startsWith('/auth/callback') ||
       window.location.hash.includes('access_token') ||
       window.location.hash.includes('type=magiclink') ||
       window.location.search.includes('token_hash')

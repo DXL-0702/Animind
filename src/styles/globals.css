@@ -52,6 +52,10 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+
+  .tap-feedback {
+    @apply active:scale-[0.97] transition-transform focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:outline-none;
+  }
 }
 
 /* Anime theme custom styles */
@@ -189,9 +193,9 @@ body {
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    var(--tw-bg-opacity, 1) rgb(var(--color-base-200)),
-    rgb(var(--color-base-300)),
-    rgb(var(--color-base-200))
+    #FFF0F0,
+    #F5D8D8,
+    #FFF0F0
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;

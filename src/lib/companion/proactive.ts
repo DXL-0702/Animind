@@ -1,7 +1,7 @@
 import { dal } from '@/lib/dal';
 import { llmClient } from '@/lib/llm/client';
 import { extractJSON } from '@/lib/utils/extract-json';
-import { PROACTIVE_MESSAGE_PROMPT } from '@/lib/llm/prompts';
+import { PROACTIVE_MESSAGE_PROMPT, SILENCE_BREAKER_PROMPT } from '@/lib/llm/prompts';
 import { getRecentMemories } from '@/lib/memory/vector-store';
 
 // 主动行为冷却时间（小时）
@@ -86,18 +86,54 @@ export function detectSilence(lastUserMessageTime: number): boolean {
   return silenceMinutes >= 5; // 5分钟沉默
 }
 
-// 生成沉默打破消息
-export async function generateSilenceBreaker(characterId: string): Promise<string> {
+// 生成沉默打破消息（LLM驱动，模板兜底）
+export async function generateSilenceBreaker(
+  characterId: string,
+  userId: string,
+  locale: 'zh-CN' | 'ja-JP' = 'zh-CN'
+): Promise<string> {
   const character = await dal.characters.getById(characterId);
+  const relationship = await dal.relationships.getByCharacterAndUser(characterId, userId);
+
   if (!character) return '在想什么呢？';
 
-  const silenceBreakerTemplates = [
-    '在想什么呢？',
-    '怎么不说话了？',
-    '有什么心事吗？',
-    '要不要聊聊天？',
-    '我在这里哦~',
-  ];
+  // 解析性格特征
+  let traits: string[] = [];
+  try {
+    const p = JSON.parse(character.personality || '{}');
+    traits = p.core_traits || [];
+  } catch { /* ignore */ }
 
-  return silenceBreakerTemplates[Math.floor(Math.random() * silenceBreakerTemplates.length)];
+  try {
+    const response = await llmClient.chat({
+      messages: [
+        {
+          role: 'system',
+          content: SILENCE_BREAKER_PROMPT({
+            characterName: character.name,
+            personalityTraits: traits,
+            trustStage: relationship?.trust_stage || 'stranger',
+            emotionState: relationship?.emotion_state || 'neutral',
+          }, locale),
+        },
+        { role: 'user', content: '生成沉默打破消息' },
+      ],
+      temperature: 0.8,
+      max_tokens: 150,
+    });
+
+    const parsed = extractJSON<{ message: string }>(response.content);
+    return parsed.message || '在想什么呢？';
+  } catch (error) {
+    console.error('Silence breaker LLM failed, fallback to template:', error);
+    // LLM 失败时回退到模板
+    const fallbackTemplates = [
+      '在想什么呢？',
+      '怎么不说话了？',
+      '有什么心事吗？',
+      '要不要聊聊天？',
+      '我在这里哦~',
+    ];
+    return fallbackTemplates[Math.floor(Math.random() * fallbackTemplates.length)];
+  }
 }
